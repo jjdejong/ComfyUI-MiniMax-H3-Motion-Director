@@ -1094,6 +1094,8 @@ export function mountOutputUI(
             value: "",
         },
     };
+    let resultVersion = 0;
+    let restorePromise = null;
 
     const liveImage =
         liveRoot.querySelector("[data-live-image]");
@@ -1742,7 +1744,8 @@ export function mountOutputUI(
                     ? `${result.width || "—"}×${result.height || "—"}`
                         + ` · ${fps} fps`
                         + ` · ${
-                            frames.length
+                            result.frame_count
+                            || frames.length
                             || (
                                 isVideo
                                     ? "video"
@@ -2174,7 +2177,7 @@ export function mountOutputUI(
 
             finalInfo.textContent =
                 `${item.width || "—"}×${item.height || "—"}`
-                + ` · ${item.frames.length} ${tx("frames")}`
+                + ` · ${item.frame_count || item.frames.length} ${tx("frames")}`
                 + ` · ${item.fps || 24} fps`;
 
             finalInfo.dataset.hasResult =
@@ -2271,6 +2274,7 @@ export function mountOutputUI(
     };
 
     const clear = () => {
+        resultVersion += 1;
         stop();
         stopLiveMedia({
             clear: true,
@@ -2397,6 +2401,71 @@ export function mountOutputUI(
             false;
     };
 
+    const restoreLatestResult = () => {
+        const id =
+            String(
+                nodeId()
+                || "",
+            );
+
+        if (
+            !id
+            || state.segments.size
+            || state.final
+            || state.finalRecord
+        ) {
+            return Promise.resolve(false);
+        }
+
+        if (restorePromise) {
+            return restorePromise;
+        }
+
+        const version = resultVersion;
+        restorePromise =
+            (async () => {
+                const response =
+                    await fetchApi(
+                        `/minimax/motion-director/latest_result?node_id=${encodeURIComponent(id)}`,
+                    );
+
+                if (!response?.ok) {
+                    return false;
+                }
+
+                const snapshot =
+                    await response.json();
+
+                if (version !== resultVersion) {
+                    return false;
+                }
+
+                for (const preview of snapshot.previews || []) {
+                    consumePreview(preview);
+                }
+
+                if (snapshot.report) {
+                    setReport(snapshot.report);
+                }
+
+                if (snapshot.final_ready) {
+                    setFinalRecord(snapshot.final_ready);
+                }
+
+                return true;
+            })()
+                .catch(
+                    () => false,
+                )
+                .finally(
+                    () => {
+                        restorePromise = null;
+                    },
+                );
+
+        return restorePromise;
+    };
+
     const setPipelineStatus = (detail = {}) => {
         const phase =
             String(
@@ -2455,6 +2524,8 @@ export function mountOutputUI(
 
         if (state.page !== "results") {
             stop();
+        } else {
+            void restoreLatestResult();
         }
     };
 
@@ -2700,6 +2771,7 @@ export function mountOutputUI(
         setReport,
         setAudio,
         setFinalRecord,
+        restoreLatestResult,
         setPipelineStatus,
         setTab,
         setLiveStage,

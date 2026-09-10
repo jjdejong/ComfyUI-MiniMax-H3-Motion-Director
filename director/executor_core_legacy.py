@@ -116,6 +116,7 @@ from .progress import (
     report_director_progress,
     report_director_report,
     report_director_segment_preview,
+    result_preview_indices,
 )
 from .segment_cache import (
     load_segment_audio_cache,
@@ -1110,11 +1111,15 @@ def execute_director_plan_core(
             and decoded.shape[0] >= 1
         ):
             try:
-                frames_b64 = [tensor_frame_to_jpeg_b64(decoded[i]) for i in range(int(decoded.shape[0]))]
+                frame_count = int(decoded.shape[0])
+                frames_b64 = [
+                    tensor_frame_to_jpeg_b64(decoded[index])
+                    for index in result_preview_indices(frame_count, preview_config["preview_frames"])
+                ]
                 h, w = int(decoded.shape[1]), int(decoded.shape[2])
                 report_director_segment_preview(
                     node_id, segment_index=ui_idx, image_b64=frames_b64[0], width=w, height=h,
-                    frames=frames_b64, fps=float(plan.frame_rate or 24),
+                    frames=frames_b64, fps=float(plan.frame_rate or 24), frame_count=frame_count,
                 )
             except Exception as exc:
                 log.debug("Segment video preview skipped: %s", exc)
@@ -1318,11 +1323,16 @@ def execute_director_plan_core(
         if int(frames.shape[0]) <= 0:
             return
         try:
-            frames_b64 = [tensor_frame_to_jpeg_b64(frames[i]) for i in range(int(frames.shape[0]))]
+            frame_count = int(frames.shape[0])
+            frames_b64 = [
+                tensor_frame_to_jpeg_b64(frames[index])
+                for index in result_preview_indices(frame_count, preview_config["preview_frames"])
+            ]
             height, width = int(frames.shape[1]), int(frames.shape[2])
             report_director_segment_preview(
                 node_id, segment_index=int(seg.timeline_index), image_b64=frames_b64[0],
                 width=width, height=height, frames=frames_b64, fps=float(plan.frame_rate or 24),
+                frame_count=frame_count,
             )
         except Exception as exc:
             log.debug("Resolved Source Bridge preview skipped: %s", exc)
@@ -1607,15 +1617,17 @@ def execute_director_plan_core(
             if node_id:
                 for export_segment, refined_chunk in zip(export_segments, refined_chunks):
                     try:
+                        frame_count = int(refined_chunk.shape[0])
                         frames_b64 = [
                             tensor_frame_to_jpeg_b64(refined_chunk[index])
-                            for index in range(int(refined_chunk.shape[0]))
+                            for index in result_preview_indices(frame_count, preview_config["preview_frames"])
                         ]
                         report_director_segment_preview(
                             node_id, segment_index=int(export_segment.timeline_index),
                             image_b64=frames_b64[0], width=int(refined_chunk.shape[2]),
                             height=int(refined_chunk.shape[1]), frames=frames_b64,
                             fps=float(plan.frame_rate or 24), stage="Face Refine Final", result_kind="segment",
+                            frame_count=frame_count,
                         )
                     except Exception as exc:
                         log.debug("Face-refined segment preview skipped: %s", exc)
@@ -1865,12 +1877,17 @@ def execute_director_plan_core(
     report_director_report(node_id, rendered_report)
     if node_id:
         try:
-            final_frames_b64 = [tensor_frame_to_jpeg_b64(combined[index]) for index in range(int(combined.shape[0]))]
+            final_frame_count = int(combined.shape[0])
+            final_frames_b64 = [
+                tensor_frame_to_jpeg_b64(combined[index])
+                for index in result_preview_indices(final_frame_count, preview_config["preview_frames"])
+            ]
             if final_frames_b64:
                 report_director_segment_preview(
                     node_id, segment_index=max(0, len(export_chunks) - 1), image_b64=final_frames_b64[0],
                     width=int(combined.shape[2]), height=int(combined.shape[1]), frames=final_frames_b64,
                     fps=float(plan.frame_rate or 24), stage="Final", result_kind="final",
+                    frame_count=final_frame_count,
                 )
         except Exception as exc:
             log.debug("Final result preview skipped: %s", exc)
