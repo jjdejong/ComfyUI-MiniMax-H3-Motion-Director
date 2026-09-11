@@ -134,6 +134,8 @@ import {
     aspectDisplayLabel,
     getLocale,
     onLocaleChange,
+    runFramesDisplayLabel,
+    runPhaseDisplayLabel,
     t,
     taskDisplayLabel,
     toggleLocale,
@@ -10026,7 +10028,7 @@ class MiniMaxH3MotionDirectorEditor {
         const timelineSeg = detail.timeline_segment ?? runSeg;
         const partialRun = !!detail.partial_run
             || (this.isRunSelectEnabled?.() && runTotal < timelineTotal);
-        const phaseLabel = detail.phase_label || detail.phase || t("run.phase.default");
+        const phaseLabel = runPhaseDisplayLabel(detail.phase, detail.phase_label);
         const overallPct = detail.overall_max > 0
             ? Math.round((100 * detail.overall_value) / detail.overall_max)
             : 0;
@@ -10081,7 +10083,8 @@ class MiniMaxH3MotionDirectorEditor {
         }
         this.runTitleEl.textContent = title;
         const parts = [];
-        if (detail.frames_label) parts.push(detail.frames_label);
+        const framesLabel = runFramesDisplayLabel(detail.frames_label);
+        if (framesLabel) parts.push(framesLabel);
         if (detail.task_key) parts.push(detail.task_key);
         const elapsedSeconds = Math.max(0, Number(detail.elapsed_seconds) || 0);
         const phaseElapsedSeconds = Math.max(0, Number(detail.phase_elapsed_seconds) || 0);

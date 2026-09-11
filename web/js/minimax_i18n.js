@@ -227,6 +227,19 @@ const ZH = {
     "run.detailRemainingGroups": "还剩 {n} 组",
     "run.detailRemainingSegments": "还剩 {n} 段",
     "run.detailTimelineTotal": "时间轴共 {n} 段",
+    "run.frames": "帧 {range}",
+    "run.phase.prepare": "准备片段",
+    "run.phase.context_encode": "H3 条件编码",
+    "run.phase.sample": "采样",
+    "run.phase.global_upscale": "全局精修 · 放大",
+    "run.phase.global_refine": "全局精修 · 二次采样",
+    "run.phase.decode": "AV 解码",
+    "run.phase.assemble": "多段组合",
+    "run.phase.face_refine": "人脸精修",
+    "run.phase.finalize": "生成结果整理",
+    "run.phase.rtx_deblur": "NVIDIA RTX Deblur",
+    "run.phase.plan": "解析时间轴 / 加载视频",
+    "run.phase.finish": "全部完成",
     "run.phase.default": "运行中",
     "runSelect.noneChecked": "未勾选任何{unit}（无法运行）",
     "runSelect.all": "将运行全部 {n} {unit}",
@@ -671,6 +684,19 @@ const EN = {
     "run.detailRemainingGroups": "{n} groups remaining",
     "run.detailRemainingSegments": "{n} segments remaining",
     "run.detailTimelineTotal": "Timeline has {n} segments",
+    "run.frames": "Frames {range}",
+    "run.phase.prepare": "Preparing segment",
+    "run.phase.context_encode": "H3 conditioning",
+    "run.phase.sample": "Sampling",
+    "run.phase.global_upscale": "Global refine · Upscale",
+    "run.phase.global_refine": "Global refine · Second sampling",
+    "run.phase.decode": "AV decoding",
+    "run.phase.assemble": "Assembling segments",
+    "run.phase.face_refine": "Face refinement",
+    "run.phase.finalize": "Preparing result",
+    "run.phase.rtx_deblur": "NVIDIA RTX Deblur",
+    "run.phase.plan": "Parsing timeline / loading video",
+    "run.phase.finish": "Complete",
     "run.phase.default": "Running",
     "runSelect.noneChecked": "No {unit} checked (cannot run)",
     "runSelect.all": "Will run all {n} {unit}",
@@ -971,6 +997,22 @@ export function t(key, vars) {
     const dict = DICTS[locale] || ZH;
     const raw = dict[key] ?? ZH[key] ?? key;
     return formatTemplate(raw, vars);
+}
+
+export function runPhaseDisplayLabel(phase, fallback = "") {
+    const value = String(phase || "").trim();
+    if (value) {
+        const key = `run.phase.${value}`;
+        const localized = t(key);
+        if (localized !== key) return localized;
+    }
+    return String(fallback || value || t("run.phase.default"));
+}
+
+export function runFramesDisplayLabel(label) {
+    const value = String(label || "").trim();
+    const match = value.match(/^(?:帧|frames?)\s+(.+)$/i);
+    return match ? t("run.frames", { range: match[1] }) : value;
 }
 
 /** Apply data-i18n / data-i18n-title / data-i18n-placeholder / data-i18n-html on a subtree. */

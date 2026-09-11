@@ -50,6 +50,22 @@ const EN = {
     categories_prompt: ["人物", "场景", "动作", "运镜", "风格", "对白", "其他"],
 };
 
+const EN_CATEGORY_LABELS = {
+    人物: "Characters",
+    场景: "Scenes",
+    道具: "Props",
+    其他: "Other",
+    音色: "Voices",
+    台词: "Lines",
+    音效: "Sound Effects",
+    音乐: "Music",
+    动作: "Actions",
+    镜头: "Shots",
+    运镜: "Camera Movement",
+    风格: "Style",
+    对白: "Dialogue",
+};
+
 function dict() { return String(getLocale?.() || "zh").toLowerCase().startsWith("en") ? EN : ZH; }
 
 export function mlT(key, vars = {}) {
@@ -61,6 +77,13 @@ export function mlT(key, vars = {}) {
 
 export function materialCategories(kind) {
     return mlT(`categories_${kind}`);
+}
+
+export function materialCategoryLabel(category) {
+    const value = String(category || "");
+    return String(getLocale?.() || "zh").toLowerCase().startsWith("en")
+        ? EN_CATEGORY_LABELS[value] || value
+        : value;
 }
 
 export function onMaterialLocaleChange(callback) {
