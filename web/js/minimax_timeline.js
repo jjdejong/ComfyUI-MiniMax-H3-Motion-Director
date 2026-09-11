@@ -150,7 +150,7 @@ import {
     destroyDirectorModalForHost,
     DIRECTOR_LAUNCHER_HEIGHT,
     getDirectorModalForHost,
-} from "./minimax_director_modal.js?boot=live_results_v1";
+} from "./minimax_director_modal.js?boot=live_results_v2";
 import {
     contextLinkMode,
     ensureTimelineContextLinks,
@@ -2329,6 +2329,10 @@ class MiniMaxH3MotionDirectorEditor {
                 || [...(this._promptMentionControllers || []), ...(this._batchPromptMentionControllers || [])]
                     .some((controller) => controller?.isMenuOpen)
             ),
+            onRun: () => {
+                this.flushTimelineSync();
+                return app.queuePrompt(0, 1, { queueNodeIds: [String(this.node.id)] });
+            },
             onOpen: () => {
                 this._directorModalOpen = true;
                 this._resetLayoutStyles();
@@ -10087,8 +10091,8 @@ class MiniMaxH3MotionDirectorEditor {
             const remainSeconds = Math.floor(seconds % 60);
             return `${String(minutes).padStart(2, "0")}:${String(remainSeconds).padStart(2, "0")}`;
         };
-        if (elapsedSeconds > 0) parts.push(`已用 ${fmtElapsed(elapsedSeconds)}`);
-        if (phaseElapsedSeconds > 0) parts.push(`当前阶段 ${fmtElapsed(phaseElapsedSeconds)}`);
+        if (elapsedSeconds > 0) parts.push(t("run.elapsed", { time: fmtElapsed(elapsedSeconds) }));
+        if (phaseElapsedSeconds > 0) parts.push(t("run.phaseElapsed", { time: fmtElapsed(phaseElapsedSeconds) }));
         parts.push(t("run.detailOverall", { pct: overallPct }));
         if (runTotal > 1) {
             parts.push(this.isImageBatch()
