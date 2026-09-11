@@ -1603,13 +1603,35 @@ export function mountOutputUI(
                             : []
                     ),
             );
+        const fps =
+            Number(
+                ordered[0]?.fps
+                || 24,
+            );
+        const frameCount =
+            ordered.reduce(
+                (total, item) =>
+                    total
+                    + Number(
+                        item.frame_count
+                        || item.frames?.length
+                        || 0,
+                    ),
+                0,
+            );
 
         return frames.length
             ? {
                 frames,
-                fps:
-                    ordered[0]?.fps
-                    || 24,
+                fps,
+                frame_count: frameCount,
+                preview_fps:
+                    frames.length > 1
+                    && frameCount > 1
+                        ? fps
+                            * (frames.length - 1)
+                            / (frameCount - 1)
+                        : fps,
                 width:
                     ordered[0]?.width,
                 height:
@@ -1708,20 +1730,25 @@ export function mountOutputUI(
                 result?.fps
                 || 24,
             );
+        const previewFps =
+            Number(
+                result?.preview_fps
+                || fps,
+            );
 
         resultsRoot
             .querySelector(
                 "[data-result-time]",
             )
             .textContent =
-                `${(state.index / fps).toFixed(2)}`
+                `${(state.index / previewFps).toFixed(2)}`
                 + " / "
                 + `${(
                     Math.max(
                         0,
                         frames.length - 1,
                     )
-                    / fps
+                    / previewFps
                 ).toFixed(2)}`;
 
         resultsRoot
@@ -1770,7 +1797,8 @@ export function mountOutputUI(
 
             getFps: () =>
                 Number(
-                    activeResult()?.fps
+                    activeResult()?.preview_fps
+                    || activeResult()?.fps
                     || 24,
                 ),
 
@@ -2828,7 +2856,13 @@ export function mountOutputUI(
                     || "",
                 );
 
-            if (id) {
+            const runId =
+                String(
+                    state.finalRecord?.run_id
+                    || "",
+                );
+
+            if (id && runId) {
                 fetchApi(
                     "/minimax/motion-director/release_video",
                     {
@@ -2840,6 +2874,7 @@ export function mountOutputUI(
                         body:
                             JSON.stringify({
                                 node_id: id,
+                                run_id: runId,
                             }),
                     },
                 ).catch?.(

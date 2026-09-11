@@ -302,8 +302,8 @@ async def minimax_release_final_video(request):
     except Exception:
         body = {}
     node_id = str(body.get("node_id") or "").strip()
-    if node_id:
-        FINAL_VIDEO_REGISTRY.release(node_id)
+    run_id = str(body.get("run_id") or "").strip()
+    if node_id and run_id and FINAL_VIDEO_REGISTRY.release(node_id, run_id):
         clear_director_result_snapshot(node_id)
     return web.json_response({"ok": True})
 
