@@ -901,9 +901,7 @@ def execute_director_plan_core(
                     "initial sampling skipped."
                 )
 
-        if samples is None and (
-            global_refine_config.get("enabled") or face_refine_config.get("enabled")
-        ):
+        if samples is None:
             samples = load_first_pass_cache(
                 node_id, seg, plan, settings=cache_settings,
             )
@@ -1798,7 +1796,11 @@ def execute_director_plan_core(
         if index in global_refine_cache_hit_indices:
             state = "Global Refine latent cache hit; Face Refine applied"
         elif index in first_pass_cache_hit_indices:
-            state = "first-pass latent cache hit; postprocessed"
+            state = (
+                "first-pass latent cache hit; postprocessed"
+                if global_refine_config.get("enabled") or face_refine_config.get("enabled")
+                else "first-pass latent cache hit; finalized"
+            )
         elif index in generated_indices:
             state = "generated"
         elif index in cache_hit_indices:
