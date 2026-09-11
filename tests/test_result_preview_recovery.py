@@ -4,6 +4,8 @@ import sys
 from types import SimpleNamespace
 from unittest.mock import patch
 
+import torch
+
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -62,6 +64,11 @@ def test_latest_result_snapshot_recovers_bounded_preview():
     assert snapshot["previews"][0]["frame_count"] == 729
     assert len(snapshot["previews"][0]["frames"]) == progress.MAX_RESULT_PREVIEW_FRAMES
     assert len(events[0][1]["frames"]) == progress.MAX_RESULT_PREVIEW_FRAMES
+    preview = snapshot["previews"][0]
+    assert abs(
+        (len(preview["frames"]) - 1) / preview["preview_fps"]
+        - (preview["frame_count"] - 1) / preview["fps"]
+    ) < 1e-9
 
     with patch.dict(sys.modules, {"server": fake_server_module}):
         for segment_index in range(progress.MAX_RESULT_SNAPSHOT_PREVIEWS + 4):
@@ -84,4 +91,36 @@ def test_results_ui_requests_latest_snapshot():
 
     assert "/minimax/motion-director/latest_result?node_id=" in source
     assert "void restoreLatestResult();" in source
+    assert "activeResult()?.preview_fps" in source
     assert '"GET", "/minimax/motion-director/latest_result"' in routes
+    assert 'body.get("run_id")' in routes
+
+
+def test_stale_ui_release_cannot_clear_a_newer_run():
+    from director.video_export import FinalVideoRegistry, FinalVideoUnavailable
+
+    registry = FinalVideoRegistry(
+        video_factory=lambda images, audio, fps: SimpleNamespace(images=images, audio=audio, fps=fps),
+    )
+    old_run = registry.begin_run("director-1")
+    new_run = registry.begin_run("director-1")
+
+    assert registry.release("director-1", old_run) is False
+    record, _auto_result = registry.register_final(
+        "director-1",
+        new_run,
+        images=torch.zeros((2, 2, 2, 3)),
+        audio=None,
+        fps=24,
+        frame_count=2,
+        save_config={"auto_save": False},
+    )
+    assert registry.get("director-1", new_run) is record
+    assert registry.release("director-1", new_run) is True
+
+    try:
+        registry.get("director-1", new_run)
+    except FinalVideoUnavailable:
+        pass
+    else:
+        raise AssertionError("matching release must clear the completed result")

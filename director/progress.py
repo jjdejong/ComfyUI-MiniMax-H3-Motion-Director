@@ -274,6 +274,10 @@ def report_director_segment_preview(
         payload["frames"] = [frames[index] for index in preview_indices]
         payload["fps"] = fps
         payload["frame_count"] = int(frame_count if frame_count is not None else len(frames))
+        if not live and len(payload["frames"]) > 1 and payload["frame_count"] > 1:
+            payload["preview_fps"] = (
+                float(fps) * (len(payload["frames"]) - 1) / (payload["frame_count"] - 1)
+            )
         if len(preview_indices) < len(frames):
             payload["preview_frame_indices"] = preview_indices
     if step is not None:
