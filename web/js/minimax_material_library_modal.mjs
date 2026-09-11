@@ -33,7 +33,7 @@ import {
     updateMaterial,
     uploadMediaMaterial,
 } from "./minimax_material_library_api.mjs";
-import { materialCategories, materialCategoryLabel, mlT, onMaterialLocaleChange } from "./minimax_material_library_i18n.mjs";
+import { materialCategories, materialCategoryLabel, mlT, onMaterialLocaleChange } from "./minimax_material_library_i18n.mjs?boot=material_library_i18n_v2";
 
 const STYLE_ID = "mmx-material-library-styles";
 const TYPE_ORDER = ["image", "audio", "video", "prompt"];

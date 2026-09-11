@@ -3,8 +3,8 @@ import fs from "node:fs";
 import {
     materialCategories,
     materialCategoryLabel,
-} from "../minimax_material_library_i18n.mjs";
-import { setLocale } from "../minimax_i18n.js";
+} from "../minimax_material_library_i18n.mjs?boot=material_library_i18n_v2";
+import { setLocale } from "../minimax_i18n.js?boot=director_i18n_v2";
 
 const modalSrc = fs.readFileSync(new URL("../minimax_material_library_modal.mjs", import.meta.url), "utf8");
 assert.match(modalSrc, /appendSubtab\(category, materialCategoryLabel\(category\)\)/);
