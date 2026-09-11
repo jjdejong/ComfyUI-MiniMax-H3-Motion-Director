@@ -1,6 +1,6 @@
 // MiniMax H3 Motion Director — Material Library localized copy.
 
-import { getLocale, onLocaleChange } from "./minimax_i18n.js";
+import { getLocale, onLocaleChange } from "./minimax_i18n.js?boot=director_i18n_v2";
 
 const ZH = {
     button: "素材库", title: "素材库", close: "关闭", cancel: "关闭", apply: "应用", applying: "应用中…",

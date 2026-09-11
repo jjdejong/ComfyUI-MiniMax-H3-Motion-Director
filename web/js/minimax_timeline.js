@@ -139,7 +139,7 @@ import {
     t,
     taskDisplayLabel,
     toggleLocale,
-} from "./minimax_i18n.js";
+} from "./minimax_i18n.js?boot=director_i18n_v2";
 import {
     applySamplingWidgetVisibility,
     migrateLegacySamplingControlNode,
