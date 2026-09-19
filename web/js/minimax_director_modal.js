@@ -95,6 +95,7 @@ export function createDirectorModal({
     toggleLanguage,
     hasInternalDialog,
     onRun,
+    onRetake,
     onOpen,
     onClose,
     onResize,
@@ -169,6 +170,11 @@ export function createDirectorModal({
     runButton.type = "button";
     runButton.className = "mmx-director-page-run";
     runButton.dataset.a = "run-director";
+    const retakeButton = document.createElement("button");
+    retakeButton.type = "button";
+    retakeButton.className = "mmx-director-page-run";
+    retakeButton.dataset.a = "retake-selected";
+    retakeButton.hidden = typeof onRetake !== "function";
 
     const pageStack = document.createElement("div");
     pageStack.className = "mmx-director-page-stack";
@@ -187,7 +193,7 @@ export function createDirectorModal({
 
     const actions = document.createElement("div");
     actions.className = "mmx-director-page-actions";
-    actions.append(runButton, closeButton);
+    actions.append(retakeButton, runButton, closeButton);
     header.append(title, navigation, actions);
     shell.append(header, pageStack, overlayLayer);
     overlay.appendChild(shell);
@@ -207,6 +213,8 @@ export function createDirectorModal({
         runButton.textContent = translate("modal.run");
         runButton.title = translate("modal.runTitle");
         runButton.setAttribute("aria-label", translate("modal.run"));
+        retakeButton.textContent = translate("modal.retake");
+        retakeButton.title = translate("modal.retakeTitle");
         closeButton.title = translate("modal.close");
         closeButton.setAttribute("aria-label", translate("modal.close"));
         shell.setAttribute("aria-label", translate("modal.directorTitle"));
@@ -324,6 +332,7 @@ export function createDirectorModal({
             openButton.removeEventListener("click", handleOpenClick);
             languageButton.removeEventListener("click", handleLanguageClick);
             runButton.removeEventListener("click", handleRunClick);
+            retakeButton.removeEventListener("click", handleRetakeClick);
             closeButton.removeEventListener("click", handleCloseClick);
             previousButton.removeEventListener("click", handlePreviousPage);
             nextButton.removeEventListener("click", handleNextPage);
@@ -358,9 +367,24 @@ export function createDirectorModal({
         event.stopPropagation();
         if (runButton.disabled || typeof onRun !== "function") return;
         runButton.disabled = true;
+        retakeButton.disabled = true;
         try {
             await onRun();
         } finally {
+            runButton.disabled = false;
+            retakeButton.disabled = false;
+        }
+    };
+    const handleRetakeClick = async (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        if (retakeButton.disabled || typeof onRetake !== "function") return;
+        retakeButton.disabled = true;
+        runButton.disabled = true;
+        try {
+            await onRetake();
+        } finally {
+            retakeButton.disabled = false;
             runButton.disabled = false;
         }
     };
@@ -402,6 +426,7 @@ export function createDirectorModal({
     openButton.addEventListener("click", handleOpenClick);
     languageButton.addEventListener("click", handleLanguageClick);
     runButton.addEventListener("click", handleRunClick);
+    retakeButton.addEventListener("click", handleRetakeClick);
     closeButton.addEventListener("click", handleCloseClick);
     previousButton.addEventListener("click", handlePreviousPage);
     nextButton.addEventListener("click", handleNextPage);

@@ -113,7 +113,8 @@ import {
 import {
     commitRunSelectionMutation as commitRunSelectionMutationNow,
     ensureRunSelectionSerialized,
-} from "./minimax_run_selection.mjs";
+    queueDirectorRetake,
+} from "./minimax_run_selection.mjs?boot=retake_http_v1";
 import {
     DIRECTOR_STATE_COLORS,
     VIDEO_CONTINUITY_STRATEGIES,
@@ -2335,6 +2336,7 @@ class MiniMaxH3MotionDirectorEditor {
                 this.flushTimelineSync();
                 return app.queuePrompt(0, 1, { queueNodeIds: [String(this.node.id)] });
             },
+            onRetake: () => queueDirectorRetake(this, { app, api, translate: t }),
             onOpen: () => {
                 this._directorModalOpen = true;
                 this._resetLayoutStyles();
